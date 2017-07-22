@@ -28,7 +28,7 @@ export function storeCurrentEndpointKey(currentEndpointKey) {
 };
 
 export function configure(endpoint={}, settings={}) {
-  return dispatch => {
+    return dispatch => {
     // don't render anything for OAuth redirects
     if (settings.currentLocation && settings.currentLocation.match(/blank=true/)) {
       return Promise.resolve({blank: true});
@@ -78,6 +78,7 @@ export function configure(endpoint={}, settings={}) {
       // if the authentication happened server-side, find the resulting auth
       // credentials that were injected into the dom.
       let tokenBridge = document.getElementById("token-bridge");
+      let {authRedirectPath, authRedirectHeaders} = getRedirectInfo(window.location);
 
       if (tokenBridge) {
         let rawServerCreds = tokenBridge.innerHTML;
@@ -85,7 +86,6 @@ export function configure(endpoint={}, settings={}) {
           let serverCreds = JSON.parse(rawServerCreds);
 
           ({headers, user, firstTimeLogin, mustResetPassword} = serverCreds);
-
           if (user) {
             dispatch(authenticateComplete(user));
 
@@ -102,16 +102,26 @@ export function configure(endpoint={}, settings={}) {
             firstTimeLogin
           }));
         }
-      }
+      } else {
+        if (authRedirectHeaders) {
+          headers = authRedirectHeaders;
+        }
 
-      let {authRedirectPath, authRedirectHeaders} = getRedirectInfo(window.location);
+        if (authRedirectHeaders && authRedirectHeaders.reset_password) {
+          mustResetPassword = authRedirectHeaders.reset_password;
+        }
+
+        if (authRedirectHeaders && authRedirectHeaders.first_time_login) {
+          firstTimeLogin = authRedirectHeaders.first_time_login;
+        }
+      }
 
       if (authRedirectPath) {
         dispatch(push({pathname: authRedirectPath}));
       }
 
       if (authRedirectHeaders && authRedirectHeaders.uid && authRedirectHeaders["access-token"]) {
-        settings.initialCredentials = extend({}, settings.initialCredentials, authRedirectHeaders);
+        settings.initialCredentials = extend({}, settings.initialCredentials, {headers: authRedirectHeaders});
       }
 
       // if tokens were invalidated by server or from the settings, make sure

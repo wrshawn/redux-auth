@@ -68,9 +68,9 @@ module.exports = {
     new webpack.DefinePlugin({__CLIENT__: true, __SERVER__: false}),
     new webpack.DefinePlugin({"process.env": {NODE_ENV: "\"production\""}}),
     //Dedupe Plugin is gone with webpack 2. https://webpack.github.io/docs/list-of-plugins.html#dedupeplugin
-    new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.OccurenceOrderPlugin(),
-    new webpack.optimize.UglifyJsPlugin()
+    // new webpack.optimize.DedupePlugin(),
+    // new webpack.optimize.OccurenceOrderPlugin(),
+    // new webpack.optimize.UglifyJsPlugin()
   ],
   module:  {
     loaders: [
